@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <!-- Dark background circle -->
+  <circle cx="32" cy="32" r="32" fill="#0a0f14"/>
+  <!-- House silhouette -->
+  <polygon points="32,10 52,28 48,28 48,52 36,52 36,40 28,40 28,52 16,52 16,28 12,28" fill="#c2651e" opacity="0.9"/>
+  <!-- Musical note inside the house -->
+  <rect x="30" y="29" width="3" height="10" rx="1" fill="#fff" opacity="0.85"/>
+  <ellipse cx="29" cy="39.5" rx="3" ry="2" fill="#fff" opacity="0.85"/>
+  <rect x="33" y="26" width="6" height="2" rx="1" fill="#fff" opacity="0.85"/>
+</svg>
