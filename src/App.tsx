@@ -178,6 +178,14 @@ export default function App() {
     setHoverVolume(null);
   };
 
+  const seekBy = (seconds: number) => {
+    if (audioRef.current) {
+      const newTime = Math.max(0, Math.min(audioRef.current.currentTime + seconds, DURATION));
+      audioRef.current.currentTime = newTime;
+      setCurrentTime(newTime);
+    }
+  };
+
   const toggleMute = () => {
     if (volume > 0) {
       setVolume(0);
@@ -290,11 +298,7 @@ export default function App() {
               </button>
               <button 
                 className="text-neutral-300 hover:text-orange-400 transition-colors"
-                onClick={() => {
-                  const newTime = Math.max(0, currentTime - 10);
-                  setCurrentTime(newTime);
-                  if (audioRef.current) audioRef.current.currentTime = newTime;
-                }}
+                onClick={() => seekBy(-10)}
               >
                 <SkipBack size={28} fill="currentColor" />
               </button>
@@ -306,11 +310,7 @@ export default function App() {
               </button>
               <button 
                 className="text-neutral-300 hover:text-orange-400 transition-colors"
-                onClick={() => {
-                  const newTime = Math.min(DURATION, currentTime + 10);
-                  setCurrentTime(newTime);
-                  if (audioRef.current) audioRef.current.currentTime = newTime;
-                }}
+                onClick={() => seekBy(10)}
               >
                 <SkipForward size={28} fill="currentColor" />
               </button>
