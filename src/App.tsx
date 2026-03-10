@@ -35,6 +35,18 @@ const LYRICS = [
 const FALLBACK_DURATION = 244;
 const NUM_BARS = 48;
 
+function clamp(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), max);
+}
+
+function getCenteredScrollTop(container: HTMLElement, element: HTMLElement) {
+  const maxScrollTop = Math.max(0, container.scrollHeight - container.clientHeight);
+  const targetScrollTop =
+    element.offsetTop + element.offsetHeight / 2 - container.clientHeight / 2;
+
+  return clamp(targetScrollTop, 0, maxScrollTop);
+}
+
 function formatTime(seconds: number) {
   const m = Math.floor(seconds / 60);
   const s = Math.floor(seconds % 60);
@@ -56,6 +68,7 @@ export default function App() {
   const [isBeat, setIsBeat] = useState(false);
 
   const lyricsContainerRef = useRef<HTMLDivElement>(null);
+  const lyricRefs = useRef<Array<HTMLParagraphElement | null>>([]);
   const progressBarRef = useRef<HTMLDivElement>(null);
   const volumeBarRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -252,16 +265,34 @@ export default function App() {
   });
 
   useEffect(() => {
-    if (lyricsContainerRef.current && activeLyricIndex !== -1) {
-      const activeElement = lyricsContainerRef.current.children[0].children[activeLyricIndex] as HTMLElement;
-      if (activeElement) {
-        activeElement.scrollIntoView({
-          behavior: 'smooth',
-          block: 'center',
-        });
-      }
+    const container = lyricsContainerRef.current;
+    const activeElement = activeLyricIndex === -1 ? null : lyricRefs.current[activeLyricIndex];
+
+    if (!container || !activeElement) return;
+
+    const activeLyric = LYRICS[activeLyricIndex];
+    const nextLyric = LYRICS[activeLyricIndex + 1];
+    const activeScrollTop = getCenteredScrollTop(container, activeElement);
+
+    if (!nextLyric) {
+      container.scrollTop = activeScrollTop;
+      return;
     }
-  }, [activeLyricIndex]);
+
+    const nextElement = lyricRefs.current[activeLyricIndex + 1];
+    if (!nextElement) {
+      container.scrollTop = activeScrollTop;
+      return;
+    }
+
+    const segmentDuration = nextLyric.time - activeLyric.time;
+    const segmentProgress = segmentDuration > 0
+      ? clamp((currentTime - activeLyric.time) / segmentDuration, 0, 1)
+      : 0;
+    const nextScrollTop = getCenteredScrollTop(container, nextElement);
+
+    container.scrollTop = activeScrollTop + (nextScrollTop - activeScrollTop) * segmentProgress;
+  }, [activeLyricIndex, currentTime]);
 
   const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (progressBarRef.current) {
@@ -527,6 +558,9 @@ export default function App() {
                 return (
                   <p 
                     key={idx}
+                    ref={(element) => {
+                      lyricRefs.current[idx] = element;
+                    }}
                     className={`text-xl sm:text-2xl lg:text-4xl font-serif leading-relaxed transition-all duration-1000 cursor-pointer ${
                       isActive 
                         ? `text-white text-shadow-glow origin-left opacity-100 ${isBeat ? 'scale-[1.08]' : 'scale-105'}` 
