@@ -35,18 +35,6 @@ const LYRICS = [
 const FALLBACK_DURATION = 244;
 const NUM_BARS = 48;
 
-function clamp(value: number, min: number, max: number) {
-  return Math.min(Math.max(value, min), max);
-}
-
-function getCenteredScrollTop(container: HTMLElement, element: HTMLElement) {
-  const maxScrollTop = Math.max(0, container.scrollHeight - container.clientHeight);
-  const targetScrollTop =
-    element.offsetTop + element.offsetHeight / 2 - container.clientHeight / 2;
-
-  return clamp(targetScrollTop, 0, maxScrollTop);
-}
-
 function formatTime(seconds: number) {
   const m = Math.floor(seconds / 60);
   const s = Math.floor(seconds % 60);
@@ -65,10 +53,7 @@ export default function App() {
   const [hoverTimePos, setHoverTimePos] = useState<number>(0);
   const [isDraggingProgress, setIsDraggingProgress] = useState(false);
   const [isDraggingVolume, setIsDraggingVolume] = useState(false);
-  const [isBeat, setIsBeat] = useState(false);
 
-  const lyricsContainerRef = useRef<HTMLDivElement>(null);
-  const lyricRefs = useRef<Array<HTMLParagraphElement | null>>([]);
   const progressBarRef = useRef<HTMLDivElement>(null);
   const volumeBarRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -76,9 +61,6 @@ export default function App() {
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const animFrameRef = useRef<number>(0);
-  const beatCooldownRef = useRef<number>(0);
-  const beatTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const isBeatRef = useRef(false);
 
   // Initialise the Web Audio API graph (must be called from a user-gesture handler)
   const initAudioContext = () => {
@@ -140,25 +122,6 @@ export default function App() {
         gradient.addColorStop(1, 'rgba(234,88,12,0.9)');   // orange-600
         canvasCtx.fillStyle = gradient;
         canvasCtx.fillRect(x, canvas.height - barHeight, barW - 2, barHeight);
-      }
-
-      // Beat detection: average the bass frequency bins (lowest ~15 % of spectrum)
-      const bassEnd = Math.floor(bufferLength * 0.15);
-      let bassSum = 0;
-      for (let i = 0; i < bassEnd; i++) bassSum += dataArray[i];
-      const bassAvg = bassEnd > 0 ? bassSum / bassEnd : 0;
-
-      const now = Date.now();
-      if (bassAvg > 140 && now - beatCooldownRef.current > 300 && !isBeatRef.current) {
-        beatCooldownRef.current = now;
-        isBeatRef.current = true;
-        setIsBeat(true);
-        if (beatTimerRef.current !== null) clearTimeout(beatTimerRef.current);
-        beatTimerRef.current = setTimeout(() => {
-          isBeatRef.current = false;
-          beatTimerRef.current = null;
-          setIsBeat(false);
-        }, 150);
       }
 
       animFrameRef.current = requestAnimationFrame(tick);
@@ -263,38 +226,6 @@ export default function App() {
     const nextLyric = LYRICS[index + 1];
     return currentTime >= lyric.time && (!nextLyric || currentTime < nextLyric.time);
   });
-
-  useEffect(() => {
-    const container = lyricsContainerRef.current;
-    if (activeLyricIndex < 0 || activeLyricIndex >= LYRICS.length) return;
-
-    const activeElement = lyricRefs.current[activeLyricIndex];
-
-    if (!container || !activeElement) return;
-
-    const activeLyric = LYRICS[activeLyricIndex];
-    const nextLyric = LYRICS[activeLyricIndex + 1];
-    const activeScrollTop = getCenteredScrollTop(container, activeElement);
-
-    if (!nextLyric) {
-      container.scrollTop = activeScrollTop;
-      return;
-    }
-
-    const nextElement = lyricRefs.current[activeLyricIndex + 1];
-    if (!nextElement) {
-      container.scrollTop = activeScrollTop;
-      return;
-    }
-
-    const segmentDuration = nextLyric.time - activeLyric.time;
-    const segmentProgress = segmentDuration > 0
-      ? clamp((currentTime - activeLyric.time) / segmentDuration, 0, 1)
-      : 0;
-    const nextScrollTop = getCenteredScrollTop(container, nextElement);
-
-    container.scrollTop = activeScrollTop + (nextScrollTop - activeScrollTop) * segmentProgress;
-  }, [activeLyricIndex, currentTime]);
 
   const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (progressBarRef.current) {
@@ -546,47 +477,39 @@ export default function App() {
           </div>
         </div>
 
-        {/* Lyrics Section */}
-        <div className="h-[40vh] sm:h-[50vh] lg:h-[85vh] w-full relative overflow-hidden mask-image-linear-gradient lg:col-span-7 mt-4 lg:mt-0">
-          <div 
-            className="absolute inset-0 overflow-y-auto scrollbar-hide pb-[50vh] pt-[10vh] lg:pt-[30vh] px-4 lg:px-12"
-            ref={lyricsContainerRef}
-          >
-            <div className="flex flex-col space-y-8 lg:space-y-12">
-              {LYRICS.map((lyric, idx) => {
-                const isActive = idx === activeLyricIndex;
-                const isPast = idx < activeLyricIndex;
-                
-                return (
-                  <p 
-                    key={idx}
-                    ref={(element) => {
-                      lyricRefs.current[idx] = element;
-                    }}
-                    className={`text-xl sm:text-2xl lg:text-4xl font-serif leading-relaxed transition-all duration-1000 cursor-pointer ${
-                      isActive 
-                        ? `text-white text-shadow-glow origin-left opacity-100 ${isBeat ? 'scale-[1.08]' : 'scale-105'}` 
-                        : isPast 
-                          ? 'text-neutral-600 hover:text-neutral-400 opacity-60' 
-                          : 'text-neutral-700 hover:text-neutral-400 opacity-40'
-                    }`}
-                    onClick={() => {
-                      initAudioContext();
-                      setCurrentTime(lyric.time);
-                      if (audioRef.current) audioRef.current.currentTime = lyric.time;
-                      setIsPlaying(true);
-                    }}
-                  >
-                    {lyric.text.split('\n').map((line, i) => (
-                      <React.Fragment key={i}>
-                        {line}
-                        <br />
-                      </React.Fragment>
-                    ))}
-                  </p>
-                );
-              })}
-            </div>
+        {/* Lyrics Section — full text, no auto-scroll sync */}
+        <div className="h-[40vh] sm:h-[50vh] lg:h-[85vh] w-full overflow-y-auto scrollbar-hide lg:col-span-7 mt-4 lg:mt-0 px-4 lg:px-12">
+          <div className="flex flex-col space-y-8 lg:space-y-12 py-4">
+            {LYRICS.map((lyric, idx) => {
+              const isActive = idx === activeLyricIndex;
+              const isPast = idx < activeLyricIndex;
+
+              return (
+                <p
+                  key={idx}
+                  className={`text-xl sm:text-2xl lg:text-4xl font-serif leading-relaxed transition-colors duration-500 cursor-pointer ${
+                    isActive
+                      ? 'text-white text-shadow-glow'
+                      : isPast
+                        ? 'text-neutral-500 hover:text-neutral-300'
+                        : 'text-neutral-600 hover:text-neutral-400'
+                  }`}
+                  onClick={() => {
+                    initAudioContext();
+                    setCurrentTime(lyric.time);
+                    if (audioRef.current) audioRef.current.currentTime = lyric.time;
+                    setIsPlaying(true);
+                  }}
+                >
+                  {lyric.text.split('\n').map((line, i) => (
+                    <React.Fragment key={i}>
+                      {line}
+                      <br />
+                    </React.Fragment>
+                  ))}
+                </p>
+              );
+            })}
           </div>
         </div>
       </div>
