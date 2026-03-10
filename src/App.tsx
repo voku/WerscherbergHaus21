@@ -191,7 +191,7 @@ export default function App() {
       {/* Audio Element */}
       <audio
         ref={audioRef}
-        src="/Haus_am_Werscherberg.mp3"
+        src={`${import.meta.env.BASE_URL}Haus_am_Werscherberg.mp3`}
         onTimeUpdate={(e) => {
           if (!isDraggingProgress) {
             setCurrentTime(e.currentTarget.currentTime);
@@ -225,7 +225,7 @@ export default function App() {
           {/* Album Art */}
           <div className="relative w-56 h-56 sm:w-72 sm:h-72 lg:w-96 lg:h-96 rounded-2xl overflow-hidden shadow-2xl shadow-black/80 border border-white/5 group shrink-0">
             <img 
-              src="/cover.jpg" 
+              src={`${import.meta.env.BASE_URL}cover.jpg`} 
               alt="Haus am Werscherberg" 
               className={`w-full h-full object-cover transition-transform duration-[20s] ease-linear ${isPlaying ? 'scale-110' : 'scale-100'}`}
               referrerPolicy="no-referrer"
