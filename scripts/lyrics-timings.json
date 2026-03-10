@@ -1,0 +1,163 @@
+{
+  "generatedBy": "scripts/analyze-mp3.py",
+  "audioFile": "public/Haus_am_Werscherberg.mp3",
+  "durationSeconds": 244.04,
+  "timings": [
+    {
+      "index": 0,
+      "original": 0,
+      "refined": 1,
+      "text": "Im Haus am Werscherberg, wo Türen schwingen,\nwo Kinder durch die Gänge springen,"
+    },
+    {
+      "index": 1,
+      "original": 8,
+      "refined": 10,
+      "text": "wo der Fußball gegen Wände prallt\nund der Tischkicker durch Räume hallt,"
+    },
+    {
+      "index": 2,
+      "original": 14,
+      "refined": 14,
+      "text": "am Morgen man den Therapieplan erblickt,\nder Schreiner das Internet wieder flickt."
+    },
+    {
+      "index": 3,
+      "original": 26,
+      "refined": 26,
+      "text": "Hier wohnen keine Diagnosen.\nHier wohnen Geschichten."
+    },
+    {
+      "index": 4,
+      "original": 32,
+      "refined": 32,
+      "text": "Von denen werde ich hier kurz berichten."
+    },
+    {
+      "index": 5,
+      "original": 41,
+      "refined": 40,
+      "text": "Ein Vater, längst im Leben weit,\nbegann erneut – nutzte seine Zeit."
+    },
+    {
+      "index": 6,
+      "original": 47,
+      "refined": 47,
+      "text": "Nicht weil er musste.\nNicht aus Pflicht."
+    },
+    {
+      "index": 7,
+      "original": 52,
+      "refined": 53,
+      "text": "Sondern weil sein Herz es spricht."
+    },
+    {
+      "index": 8,
+      "original": 57,
+      "refined": 56,
+      "text": "Familie wächst nicht nur im Blut,\nsie wächst im Mut."
+    },
+    {
+      "index": 9,
+      "original": 69,
+      "refined": 69,
+      "text": "Und im Ja, das einer wagt,\nnoch mehr im Tun, das mehr als Worte sagt."
+    },
+    {
+      "index": 10,
+      "original": 78,
+      "refined": 78,
+      "text": "Im nächsten Zimmer dann\nträgt man mehr als Koffer ran,"
+    },
+    {
+      "index": 11,
+      "original": 90,
+      "refined": 90,
+      "text": "mehr als Taschen, mehr als Zeit,\nsie tragen Hoffnung, Pflicht und Vergangenheit."
+    },
+    {
+      "index": 12,
+      "original": 95,
+      "refined": 94,
+      "text": "Eltern mit Arbeit im Gepäck,\ndoch Pläne treten leis zurück,"
+    },
+    {
+      "index": 13,
+      "original": 103,
+      "refined": 102,
+      "text": "denn Arbeit lässt sich neu sortieren,\ndoch Kindheit lässt sich nicht pausieren."
+    },
+    {
+      "index": 14,
+      "original": 109,
+      "refined": 108,
+      "text": "Eine Tür weiter, Schritt für Schritt,\nrichtet jemand den Blick."
+    },
+    {
+      "index": 15,
+      "original": 116,
+      "refined": 116,
+      "text": "Nicht laut, nicht inszeniert,\naber innerlich neu justiert."
+    },
+    {
+      "index": 16,
+      "original": 124,
+      "refined": 124,
+      "text": "Man kann sich selbst ganz leise verlieren,\nzwischen Müssen und Funktionieren."
+    },
+    {
+      "index": 17,
+      "original": 138,
+      "refined": 139,
+      "text": "Und findet zurück, ganz ohne Plan,\nam Küchentisch irgendwann."
+    },
+    {
+      "index": 18,
+      "original": 144,
+      "refined": 145,
+      "text": "So wie die Tochter,\ndie macht, was sie macht."
+    },
+    {
+      "index": 19,
+      "original": 154,
+      "refined": 154,
+      "text": "Das nächste Kind rennt, als wäre es leicht,\nals hätte Angst sie nie ganz erreicht."
+    },
+    {
+      "index": 20,
+      "original": 161,
+      "refined": 160,
+      "text": "Vor Jahren stand ein Wort im Raum,\ndas keiner will, in keinem Traum."
+    },
+    {
+      "index": 21,
+      "original": 167,
+      "refined": 166,
+      "text": "Doch heute trägt sie Kleid und Glanz,\nals Anna beim Karnevalstanz."
+    },
+    {
+      "index": 22,
+      "original": 178,
+      "refined": 179,
+      "text": "Ihre Eltern teilen sich die Rehazeit\nund stehen beide für die Tochter bereit."
+    },
+    {
+      "index": 23,
+      "original": 190,
+      "refined": 191,
+      "text": "Unsere Tochter lernt mehr, als Laute sagen,\nstellt ihre Fragen ohne Fragen."
+    },
+    {
+      "index": 24,
+      "original": 196,
+      "refined": 195,
+      "text": "Und wenn wir wieder heimwärts fahren,\nbleibt etwas da aus diesen Tagen:"
+    },
+    {
+      "index": 25,
+      "original": 204,
+      "refined": 202,
+      "text": "Man wächst nicht nur\ndurch das,\nwas man sagen kann."
+    }
+  ]
+}
