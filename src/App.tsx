@@ -1,33 +1,35 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Play, Pause, SkipForward, SkipBack, Shuffle, Repeat, Info, X, Volume2, Volume1, VolumeX } from 'lucide-react';
 
+// Cue times (seconds) were derived from RMS-energy onset analysis of
+// public/Haus_am_Werscherberg.mp3 using scripts/analyze-mp3.py.
 const LYRICS = [
-  { time: 0, text: "Im Haus am Werscherberg, wo Türen schwingen,\nwo Kinder durch die Gänge springen," },
-  { time: 8, text: "wo der Fußball gegen Wände prallt\nund der Tischkicker durch Räume hallt," },
-  { time: 14, text: "am Morgen man den Therapieplan erblickt,\nder Schreiner das Internet wieder flickt." },
-  { time: 26, text: "Hier wohnen keine Diagnosen.\nHier wohnen Geschichten." },
-  { time: 32, text: "Von denen werde ich hier kurz berichten." },
-  { time: 41, text: "Ein Vater, längst im Leben weit,\nbegann erneut – nutzte seine Zeit." },
-  { time: 47, text: "Nicht weil er musste.\nNicht aus Pflicht." },
-  { time: 52, text: "Sondern weil sein Herz es spricht." },
-  { time: 57, text: "Familie wächst nicht nur im Blut,\nsie wächst im Mut." },
-  { time: 69, text: "Und im Ja, das einer wagt,\nnoch mehr im Tun, das mehr als Worte sagt." },
-  { time: 78, text: "Im nächsten Zimmer dann\nträgt man mehr als Koffer ran," },
-  { time: 90, text: "mehr als Taschen, mehr als Zeit,\nsie tragen Hoffnung, Pflicht und Vergangenheit." },
-  { time: 95, text: "Eltern mit Arbeit im Gepäck,\ndoch Pläne treten leis zurück," },
-  { time: 103, text: "denn Arbeit lässt sich neu sortieren,\ndoch Kindheit lässt sich nicht pausieren." },
-  { time: 109, text: "Eine Tür weiter, Schritt für Schritt,\nrichtet jemand den Blick." },
+  { time: 0,   text: "Im Haus am Werscherberg, wo Türen schwingen,\nwo Kinder durch die Gänge springen," },
+  { time: 10,  text: "wo der Fußball gegen Wände prallt\nund der Tischkicker durch Räume hallt," },
+  { time: 14,  text: "am Morgen man den Therapieplan erblickt,\nder Schreiner das Internet wieder flickt." },
+  { time: 26,  text: "Hier wohnen keine Diagnosen.\nHier wohnen Geschichten." },
+  { time: 32,  text: "Von denen werde ich hier kurz berichten." },
+  { time: 40,  text: "Ein Vater, längst im Leben weit,\nbegann erneut – nutzte seine Zeit." },
+  { time: 47,  text: "Nicht weil er musste.\nNicht aus Pflicht." },
+  { time: 53,  text: "Sondern weil sein Herz es spricht." },
+  { time: 56,  text: "Familie wächst nicht nur im Blut,\nsie wächst im Mut." },
+  { time: 69,  text: "Und im Ja, das einer wagt,\nnoch mehr im Tun, das mehr als Worte sagt." },
+  { time: 78,  text: "Im nächsten Zimmer dann\nträgt man mehr als Koffer ran," },
+  { time: 90,  text: "mehr als Taschen, mehr als Zeit,\nsie tragen Hoffnung, Pflicht und Vergangenheit." },
+  { time: 94,  text: "Eltern mit Arbeit im Gepäck,\ndoch Pläne treten leis zurück," },
+  { time: 102, text: "denn Arbeit lässt sich neu sortieren,\ndoch Kindheit lässt sich nicht pausieren." },
+  { time: 108, text: "Eine Tür weiter, Schritt für Schritt,\nrichtet jemand den Blick." },
   { time: 116, text: "Nicht laut, nicht inszeniert,\naber innerlich neu justiert." },
   { time: 124, text: "Man kann sich selbst ganz leise verlieren,\nzwischen Müssen und Funktionieren." },
-  { time: 138, text: "Und findet zurück, ganz ohne Plan,\nam Küchentisch irgendwann." },
-  { time: 144, text: "So wie die Tochter,\ndie macht, was sie macht." },
+  { time: 139, text: "Und findet zurück, ganz ohne Plan,\nam Küchentisch irgendwann." },
+  { time: 145, text: "So wie die Tochter,\ndie macht, was sie macht." },
   { time: 154, text: "Das nächste Kind rennt, als wäre es leicht,\nals hätte Angst sie nie ganz erreicht." },
-  { time: 161, text: "Vor Jahren stand ein Wort im Raum,\ndas keiner will, in keinem Traum." },
-  { time: 167, text: "Doch heute trägt sie Kleid und Glanz,\nals Anna beim Karnevalstanz." },
-  { time: 178, text: "Ihre Eltern teilen sich die Rehazeit\nund stehen beide für die Tochter bereit." },
-  { time: 190, text: "Unsere Tochter lernt mehr, als Laute sagen,\nstellt ihre Fragen ohne Fragen." },
-  { time: 196, text: "Und wenn wir wieder heimwärts fahren,\nbleibt etwas da aus diesen Tagen:" },
-  { time: 204, text: "Man wächst nicht nur\ndurch das,\nwas man sagen kann." }
+  { time: 160, text: "Vor Jahren stand ein Wort im Raum,\ndas keiner will, in keinem Traum." },
+  { time: 166, text: "Doch heute trägt sie Kleid und Glanz,\nals Anna beim Karnevalstanz." },
+  { time: 179, text: "Ihre Eltern teilen sich die Rehazeit\nund stehen beide für die Tochter bereit." },
+  { time: 191, text: "Unsere Tochter lernt mehr, als Laute sagen,\nstellt ihre Fragen ohne Fragen." },
+  { time: 195, text: "Und wenn wir wieder heimwärts fahren,\nbleibt etwas da aus diesen Tagen:" },
+  { time: 202, text: "Man wächst nicht nur\ndurch das,\nwas man sagen kann." },
 ];
 
 const FALLBACK_DURATION = 244;
