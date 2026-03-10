@@ -266,7 +266,9 @@ export default function App() {
 
   useEffect(() => {
     const container = lyricsContainerRef.current;
-    const activeElement = activeLyricIndex === -1 ? null : lyricRefs.current[activeLyricIndex];
+    if (activeLyricIndex < 0 || activeLyricIndex >= LYRICS.length) return;
+
+    const activeElement = lyricRefs.current[activeLyricIndex];
 
     if (!container || !activeElement) return;
 
