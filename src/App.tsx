@@ -30,7 +30,8 @@ const LYRICS = [
   { time: 204, text: "Man wächst nicht nur\ndurch das,\nwas man sagen kann." }
 ];
 
-const DURATION = 244;
+const FALLBACK_DURATION = 244;
+const NUM_BARS = 48;
 
 function formatTime(seconds: number) {
   const m = Math.floor(seconds / 60);
@@ -41,6 +42,7 @@ function formatTime(seconds: number) {
 export default function App() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(FALLBACK_DURATION);
   const [volume, setVolume] = useState(0.8);
   const [showInfo, setShowInfo] = useState(false);
   const [hoverVolume, setHoverVolume] = useState<number | null>(null);
@@ -49,11 +51,148 @@ export default function App() {
   const [hoverTimePos, setHoverTimePos] = useState<number>(0);
   const [isDraggingProgress, setIsDraggingProgress] = useState(false);
   const [isDraggingVolume, setIsDraggingVolume] = useState(false);
-  
+  const [isBeat, setIsBeat] = useState(false);
+
   const lyricsContainerRef = useRef<HTMLDivElement>(null);
   const progressBarRef = useRef<HTMLDivElement>(null);
   const volumeBarRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const animFrameRef = useRef<number>(0);
+  const beatCooldownRef = useRef<number>(0);
+  const beatTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isBeatRef = useRef(false);
+
+  // Initialise the Web Audio API graph (must be called from a user-gesture handler)
+  const initAudioContext = () => {
+    if (audioContextRef.current || !audioRef.current) return;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const AudioCtx: typeof AudioContext = window.AudioContext ?? (window as any).webkitAudioContext;
+    if (!AudioCtx) return;
+
+    const ctx = new AudioCtx();
+    const analyser = ctx.createAnalyser();
+    analyser.fftSize = 256;
+    analyser.smoothingTimeConstant = 0.85;
+
+    const source = ctx.createMediaElementSource(audioRef.current);
+    source.connect(analyser);
+    analyser.connect(ctx.destination);
+
+    audioContextRef.current = ctx;
+    analyserRef.current = analyser;
+  };
+
+  // Spectrum visualiser + beat detection using Web Audio API AnalyserNode
+  useEffect(() => {
+    const analyser = analyserRef.current;
+    const canvas = canvasRef.current;
+    const canvasCtx = canvas?.getContext('2d') ?? null;
+
+    if (!isPlaying || !analyser || !canvas || !canvasCtx) {
+      cancelAnimationFrame(animFrameRef.current);
+      // Draw flat idle bars when paused
+      if (canvas && canvasCtx) {
+        canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
+        const barW = canvas.width / NUM_BARS;
+        canvasCtx.fillStyle = 'rgba(255,255,255,0.08)';
+        for (let i = 0; i < NUM_BARS; i++) {
+          canvasCtx.fillRect(i * barW + 1, canvas.height - 2, barW - 2, 2);
+        }
+      }
+      return;
+    }
+
+    const bufferLength = analyser.frequencyBinCount;
+    const dataArray = new Uint8Array(bufferLength);
+
+    const tick = () => {
+      analyser.getByteFrequencyData(dataArray);
+
+      // Draw spectrum bars
+      canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
+      const barW = canvas.width / NUM_BARS;
+      for (let i = 0; i < NUM_BARS; i++) {
+        // Map bar index to a frequency bin, using the lower 70 % of the spectrum (musical range)
+        const binIndex = Math.floor((i / NUM_BARS) * bufferLength * 0.7);
+        const value = dataArray[binIndex];
+        const barHeight = Math.max(2, (value / 255) * canvas.height);
+        const x = i * barW + 1;
+        const gradient = canvasCtx.createLinearGradient(0, canvas.height - barHeight, 0, canvas.height);
+        gradient.addColorStop(0, 'rgba(251,191,36,0.9)');  // amber-400
+        gradient.addColorStop(1, 'rgba(234,88,12,0.9)');   // orange-600
+        canvasCtx.fillStyle = gradient;
+        canvasCtx.fillRect(x, canvas.height - barHeight, barW - 2, barHeight);
+      }
+
+      // Beat detection: average the bass frequency bins (lowest ~15 % of spectrum)
+      const bassEnd = Math.floor(bufferLength * 0.15);
+      let bassSum = 0;
+      for (let i = 0; i < bassEnd; i++) bassSum += dataArray[i];
+      const bassAvg = bassEnd > 0 ? bassSum / bassEnd : 0;
+
+      const now = Date.now();
+      if (bassAvg > 140 && now - beatCooldownRef.current > 300 && !isBeatRef.current) {
+        beatCooldownRef.current = now;
+        isBeatRef.current = true;
+        setIsBeat(true);
+        if (beatTimerRef.current !== null) clearTimeout(beatTimerRef.current);
+        beatTimerRef.current = setTimeout(() => {
+          isBeatRef.current = false;
+          beatTimerRef.current = null;
+          setIsBeat(false);
+        }, 150);
+      }
+
+      animFrameRef.current = requestAnimationFrame(tick);
+    };
+
+    animFrameRef.current = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(animFrameRef.current);
+  }, [isPlaying]);
+
+  // MediaSession API — expose rich metadata and playback controls to the OS
+  useEffect(() => {
+    if (!('mediaSession' in navigator)) return;
+
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: 'Haus am Werscherberg',
+      artist: 'Northern Viking Epic',
+      artwork: [
+        { src: `${import.meta.env.BASE_URL}cover.jpg`, sizes: '512x512', type: 'image/jpeg' },
+      ],
+    });
+
+    // Use audioRef directly to avoid stale-closure problems in these handlers
+    navigator.mediaSession.setActionHandler('play', () => {
+      initAudioContext();
+      setIsPlaying(true);
+    });
+    navigator.mediaSession.setActionHandler('pause', () => setIsPlaying(false));
+    navigator.mediaSession.setActionHandler('seekbackward', (details) => {
+      const offset = details.seekOffset ?? 10;
+      if (audioRef.current) {
+        audioRef.current.currentTime = Math.max(0, audioRef.current.currentTime - offset);
+      }
+    });
+    navigator.mediaSession.setActionHandler('seekforward', (details) => {
+      const offset = details.seekOffset ?? 10;
+      if (audioRef.current) {
+        audioRef.current.currentTime = Math.min(
+          audioRef.current.duration || FALLBACK_DURATION,
+          audioRef.current.currentTime + offset,
+        );
+      }
+    });
+  }, []);
+
+  // Keep the OS playback indicator in sync
+  useEffect(() => {
+    if (!('mediaSession' in navigator)) return;
+    navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
+  }, [isPlaying]);
 
   useEffect(() => {
     if (audioRef.current) {
@@ -76,7 +215,7 @@ export default function App() {
       if (isDraggingProgress && progressBarRef.current) {
         const rect = progressBarRef.current.getBoundingClientRect();
         const pos = (e.clientX - rect.left) / rect.width;
-        const newTime = Math.max(0, Math.min(pos * DURATION, DURATION));
+        const newTime = Math.max(0, Math.min(pos * duration, duration));
         setCurrentTime(newTime);
         if (audioRef.current) {
           audioRef.current.currentTime = newTime;
@@ -126,7 +265,7 @@ export default function App() {
     if (progressBarRef.current) {
       const rect = progressBarRef.current.getBoundingClientRect();
       const pos = (e.clientX - rect.left) / rect.width;
-      const newTime = Math.max(0, Math.min(pos * DURATION, DURATION));
+      const newTime = Math.max(0, Math.min(pos * duration, duration));
       setCurrentTime(newTime);
       if (audioRef.current) {
         audioRef.current.currentTime = newTime;
@@ -144,7 +283,7 @@ export default function App() {
       const rect = progressBarRef.current.getBoundingClientRect();
       const pos = (e.clientX - rect.left) / rect.width;
       setHoverTimePos(Math.max(0, Math.min(pos, 1)));
-      setHoverTime(Math.max(0, Math.min(pos * DURATION, DURATION)));
+      setHoverTime(Math.max(0, Math.min(pos * duration, duration)));
     }
   };
 
@@ -180,7 +319,7 @@ export default function App() {
 
   const seekBy = (seconds: number) => {
     if (audioRef.current) {
-      const newTime = Math.max(0, Math.min(audioRef.current.currentTime + seconds, DURATION));
+      const newTime = Math.max(0, Math.min(audioRef.current.currentTime + seconds, duration));
       audioRef.current.currentTime = newTime;
       setCurrentTime(newTime);
     }
@@ -200,6 +339,10 @@ export default function App() {
       <audio
         ref={audioRef}
         src={`${import.meta.env.BASE_URL}Haus_am_Werscherberg.mp3`}
+        onLoadedMetadata={(e) => {
+          const d = e.currentTarget.duration;
+          if (d && isFinite(d)) setDuration(d);
+        }}
         onTimeUpdate={(e) => {
           if (!isDraggingProgress) {
             setCurrentTime(e.currentTarget.currentTime);
@@ -242,7 +385,7 @@ export default function App() {
             
             {/* Play overlay for paused state on image */}
             {!isPlaying && (
-              <div className="absolute inset-0 flex items-center justify-center bg-black/20 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer" onClick={() => setIsPlaying(true)}>
+              <div className="absolute inset-0 flex items-center justify-center bg-black/20 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer" onClick={() => { initAudioContext(); setIsPlaying(true); }}>
                 <div className="w-20 h-20 rounded-full bg-white/10 flex items-center justify-center backdrop-blur-md border border-white/20">
                   <Play size={36} className="text-white ml-2" fill="currentColor" />
                 </div>
@@ -279,7 +422,7 @@ export default function App() {
                 <div className="w-full h-1.5 bg-white/10 rounded-full relative">
                   <div 
                     className="absolute top-0 left-0 h-full bg-gradient-to-r from-orange-600 to-amber-400 rounded-full transition-all duration-100 ease-linear"
-                    style={{ width: `${(currentTime / DURATION) * 100}%` }}
+                    style={{ width: `${(currentTime / duration) * 100}%` }}
                   >
                     <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-3 h-3 bg-white rounded-full shadow-[0_0_10px_rgba(255,165,0,1)] opacity-0 group-hover:opacity-100 transition-opacity"></div>
                   </div>
@@ -287,9 +430,18 @@ export default function App() {
               </div>
               <div className="flex justify-between text-xs text-neutral-500 mt-1 font-mono tracking-wider">
                 <span>{formatTime(currentTime)}</span>
-                <span>{formatTime(DURATION)}</span>
+                <span>{formatTime(duration)}</span>
               </div>
             </div>
+
+            {/* Spectrum Visualiser (Web Audio API AnalyserNode) */}
+            <canvas
+              ref={canvasRef}
+              width={400}
+              height={40}
+              className="w-full h-8 rounded mb-4"
+              aria-hidden="true"
+            />
 
             {/* Buttons */}
             <div className="flex items-center justify-between px-2">
@@ -304,7 +456,10 @@ export default function App() {
               </button>
               <button 
                 className="w-16 h-16 flex items-center justify-center bg-white text-black rounded-full hover:scale-105 active:scale-95 transition-all shadow-[0_0_30px_rgba(255,255,255,0.15)] hover:shadow-[0_0_40px_rgba(255,255,255,0.3)]"
-                onClick={() => setIsPlaying(!isPlaying)}
+                onClick={() => {
+                  initAudioContext();
+                  setIsPlaying(!isPlaying);
+                }}
               >
                 {isPlaying ? <Pause size={32} fill="currentColor" /> : <Play size={32} fill="currentColor" className="ml-1" />}
               </button>
@@ -372,12 +527,13 @@ export default function App() {
                     key={idx}
                     className={`text-xl sm:text-2xl lg:text-4xl font-serif leading-relaxed transition-all duration-1000 cursor-pointer ${
                       isActive 
-                        ? 'text-white text-shadow-glow scale-105 origin-left opacity-100' 
+                        ? `text-white text-shadow-glow origin-left opacity-100 ${isBeat ? 'scale-[1.08]' : 'scale-105'}` 
                         : isPast 
                           ? 'text-neutral-600 hover:text-neutral-400 opacity-60' 
                           : 'text-neutral-700 hover:text-neutral-400 opacity-40'
                     }`}
                     onClick={() => {
+                      initAudioContext();
                       setCurrentTime(lyric.time);
                       if (audioRef.current) audioRef.current.currentTime = lyric.time;
                       setIsPlaying(true);
