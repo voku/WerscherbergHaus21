@@ -300,7 +300,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-[100dvh] bg-[#0a0f14] text-neutral-200 font-sans overflow-hidden relative flex items-center justify-center selection:bg-orange-500/30">
+    <div className="min-h-[100dvh] bg-[#0a0f14] text-neutral-200 font-sans relative flex items-center justify-center selection:bg-orange-500/30">
       {/* Audio Element */}
       <audio
         ref={audioRef}
@@ -325,10 +325,10 @@ export default function App() {
         <div className="absolute top-[40%] left-[40%] w-[30%] h-[30%] rounded-full bg-amber-700/10 blur-[100px] mix-blend-screen"></div>
       </div>
 
-      <div className="z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 lg:py-6 flex flex-col lg:grid lg:grid-cols-12 gap-6 lg:gap-8 items-start lg:items-center lg:max-h-[100dvh] overflow-y-auto scrollbar-hide">
+      <div className="z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 lg:py-6 flex flex-col lg:grid lg:grid-cols-12 gap-6 lg:gap-8 items-center">
         
         {/* Player Section */}
-        <div className="flex flex-col items-center lg:items-start space-y-5 lg:col-span-5 relative w-full max-w-md mx-auto lg:max-w-none pt-4 lg:pt-0">
+        <div className="flex flex-col items-center lg:items-start space-y-5 lg:space-y-6 lg:col-span-5 relative w-full max-w-md mx-auto lg:max-w-none pt-4 lg:pt-0">
           
           {/* Info Button */}
           <button 
