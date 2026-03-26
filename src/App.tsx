@@ -325,10 +325,10 @@ export default function App() {
         <div className="absolute top-[40%] left-[40%] w-[30%] h-[30%] rounded-full bg-amber-700/10 blur-[100px] mix-blend-screen"></div>
       </div>
 
-      <div className="z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-12 flex flex-col lg:grid lg:grid-cols-12 gap-8 lg:gap-12 items-center h-full lg:max-h-[100dvh] overflow-y-auto lg:overflow-hidden">
+      <div className="z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 lg:py-6 flex flex-col lg:grid lg:grid-cols-12 gap-6 lg:gap-8 items-start lg:items-center lg:max-h-[100dvh] overflow-y-auto scrollbar-hide">
         
         {/* Player Section */}
-        <div className="flex flex-col items-center lg:items-start space-y-6 lg:space-y-8 lg:col-span-5 relative w-full max-w-md mx-auto lg:max-w-none pt-4 lg:pt-0">
+        <div className="flex flex-col items-center lg:items-start space-y-5 lg:col-span-5 relative w-full max-w-md mx-auto lg:max-w-none pt-4 lg:pt-0">
           
           {/* Info Button */}
           <button 
@@ -340,7 +340,7 @@ export default function App() {
           </button>
 
           {/* Album Art */}
-          <div className="relative w-56 h-56 sm:w-72 sm:h-72 lg:w-96 lg:h-96 rounded-2xl overflow-hidden shadow-2xl shadow-black/80 border border-white/5 group shrink-0">
+          <div className="relative w-56 h-56 sm:w-64 sm:h-64 lg:w-72 lg:h-72 xl:w-80 xl:h-80 2xl:w-96 2xl:h-96 rounded-2xl overflow-hidden shadow-2xl shadow-black/80 border border-white/5 group shrink-0">
             <img 
               src={`${import.meta.env.BASE_URL}cover.jpg`} 
               alt="Haus am Werscherberg" 
@@ -361,14 +361,14 @@ export default function App() {
 
           {/* Track Info */}
           <div className="text-center lg:text-left w-full px-4 lg:px-0">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-serif font-bold text-white mb-2 lg:mb-3 tracking-wide drop-shadow-lg">Haus am Werscherberg</h1>
+            <h1 className="text-2xl sm:text-3xl lg:text-3xl xl:text-4xl font-serif font-bold text-white mb-1 lg:mb-2 tracking-wide drop-shadow-lg">Haus am Werscherberg</h1>
             <p className="text-orange-500/80 text-xs sm:text-sm tracking-[0.2em] uppercase font-medium">Northern Viking Epic</p>
           </div>
 
           {/* Controls */}
-          <div className="w-full bg-white/[0.03] backdrop-blur-2xl rounded-3xl p-5 sm:p-6 border border-white/5 shadow-2xl">
+          <div className="w-full bg-white/[0.03] backdrop-blur-2xl rounded-3xl p-4 sm:p-5 border border-white/5 shadow-2xl">
             {/* Progress Bar */}
-            <div className="mb-6">
+            <div className="mb-4">
               <div 
                 ref={progressBarRef}
                 className="h-6 flex items-center cursor-pointer relative group"
@@ -441,7 +441,7 @@ export default function App() {
             </div>
 
             {/* Volume Control */}
-            <div className="mt-8 flex items-center space-x-4 px-2">
+            <div className="mt-5 flex items-center space-x-4 px-2">
               <button onClick={toggleMute} className="text-neutral-500 hover:text-white transition-colors relative group/mute">
                 {volume === 0 ? <VolumeX size={20} /> : volume < 0.5 ? <Volume1 size={20} /> : <Volume2 size={20} />}
                 <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-neutral-800 text-white text-[10px] font-mono rounded opacity-0 group-hover/mute:opacity-100 transition-opacity whitespace-nowrap pointer-events-none border border-white/10">
@@ -478,7 +478,7 @@ export default function App() {
         </div>
 
         {/* Lyrics Section — full text, no auto-scroll sync */}
-        <div className="h-[40vh] sm:h-[50vh] lg:h-[85vh] w-full overflow-y-auto scrollbar-hide lg:col-span-7 mt-4 lg:mt-0 px-4 lg:px-12">
+        <div className="h-[40vh] sm:h-[50vh] lg:h-[90vh] w-full overflow-y-auto scrollbar-hide lg:col-span-7 mt-4 lg:mt-0 px-4 lg:px-12">
           <div className="flex flex-col space-y-8 lg:space-y-12 py-4">
             {LYRICS.map((lyric, idx) => {
               const isActive = idx === activeLyricIndex;
